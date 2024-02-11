@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
-from flask import Flask, make_response,jsonify,request
+from flask import Flask, make_response,jsonify,request,session
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_cors import CORS
-
+from config import bcrypt
 from models import db, User, StaffManagement, Restaurant, Reservation, RatingReview
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../instance/app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 migrate = Migrate(app, db)
 
@@ -25,7 +26,153 @@ class Index(Resource):
         restaurants=[restaurant.to_dict() for restaurant in  all_res]
         return make_response(jsonify(restaurants),200)
 
-api.add_resource(Index, '/')
+class Signup(Resource):
+    def post(self):
+        data = request.get_json()
+        user_or_staff=data['user_or_staff']
+        if user_or_staff == 'user':
+            try:
+                # Hash the password
+                password_hash = bcrypt.generate_password_hash(data['_password_hash']).decode('utf-8')
+
+                # Create a new User object
+                new_user = User(
+                    name=data['name'],
+                    phone_number=data['phone_number'],
+                    email=data['email'],
+                    _password_hash=password_hash
+                )
+
+                # Add the new user to the database session
+                db.session.add(new_user)
+                db.session.commit()
+
+                # Set the user_id in session
+                session["user_id"] = new_user.id
+
+                # Return success response with user data
+                return make_response(jsonify(new_user.to_dict()), 201)
+            except ValueError as ve:
+                error_message = f"ValueError: {ve}"
+                print(error_message)
+                return make_response(jsonify({'error': error_message}), 400)
+            except Exception as e:
+                error_message = f"An error occurred: {e}"
+                print(error_message)
+                return make_response(jsonify({'error': error_message}), 500)
+
+        if user_or_staff == 'staff':
+            try:
+                # Hash the password
+                password_hash = bcrypt.generate_password_hash(data['_password_hash']).decode('utf-8')
+
+                # Create a new StaffManagement object
+                new_staff = StaffManagement(
+                    name=data['name'],
+                    role=data['role'],
+                    phone_number=data['phone_number'],
+                    email=data['email'],
+                    _password_hash=password_hash
+                )
+
+                # Add the new staff to the database session
+                db.session.add(new_staff)
+                db.session.commit()
+                session["staff_id"] = new_staff.id
+
+                return make_response(jsonify(new_staff.to_dict()), 201)
+            except ValueError as ve:
+                error_message = f"ValueError: {ve}"
+                print(error_message)
+                return make_response(jsonify({'error': error_message}), 400)
+            except Exception as e:
+                error_message = f"An error occurred: {e}"
+                print(error_message)
+                return make_response(jsonify({'error': error_message}), 500)
+        
+class Login(Resource):
+    def post(self):
+
+        data = request.get_json()
+
+        user_or_staff=data.get("user_or_staff")
+        name  = data.get("name")
+        password =  data.get("password")
+
+        if user_or_staff == "user":
+            user = User.query.filter(User.name==name).first()
+
+            if user and user.authenticate(password):
+                session["user_id"] = user.id
+                response = {
+                    "id": user.id,
+                    "name": user.name,
+                    "phone_number":user.phone_number,
+                    "email":user.email
+                    }
+
+                return response
+        if user_or_staff == "staff":
+            staff = StaffManagement.query.filter(StaffManagement.name==name).first()
+
+            if staff and staff.authenticate(password):
+                session["staff_id"] = staff.id
+                response = {
+                        "id": staff.id,
+                        "name": staff.name,
+                        "role":staff.role,
+                        "phone_number":staff.phone_number,
+                        "email":staff.email
+                        }
+
+                return response
+        return {"error": "Invalid username or password or user/staff info."}, 401
+
+class CheckSession(Resource):
+    
+    def get(self):
+        user_id = session.get("user_id")
+        staff_id = session.get("staff_id")
+
+        if user_id:
+            user = User.query.get(user_id)
+            if user:
+                response = {
+                    "id": user.id,
+                    "user": user.name
+                }
+                return response
+            else:
+                return {"error": "User not found"}, 404
+        
+        elif staff_id:
+            staff = StaffManagement.query.get(staff_id)
+            if staff:
+                response = {
+                    "id": staff.id,
+                    "name": staff.name
+                }
+                return response
+            else:
+                return {"error": "Staff member not found"}, 404
+        
+        else:
+            return {"error": "Session information missing"}, 401
+
+        
+class Logout(Resource):
+    
+    def delete(self):
+        if session["user_id"]:
+            session["user_id"] =  None
+
+            return {}, 204
+        if session["staff_id"]:
+            session["staff_id"] =  None
+
+            return {}, 204
+        
+        return {"error": "Unauthorized"}, 401
 
 class Restaurants(Resource):
     def get(self):
@@ -58,10 +205,6 @@ class Restaurants(Resource):
             return make_response(jsonify({'error': error_message}), 500)
 
         
-
-
-api.add_resource(Restaurants, '/restaurants')
-
 class RestaurantsByID(Resource):
     def get(self, id):
         restaurant = Restaurant.query.filter_by(id=id).first()
@@ -107,40 +250,12 @@ class RestaurantsByID(Resource):
             return make_response('Error deleting restaurant', 500)
 
 
-
-api.add_resource(RestaurantsByID, '/restaurants/<int:id>')
-
-
 class Users(Resource):
     def get(self):
         all_users=User.query.all()
         users=[user.to_dict() for user in  all_users]
         return make_response(jsonify(users),200)
         
-    def post(self):
-        data = request.get_json()
-
-        try:
-            new_user = User(
-                name=data['name'],
-                phone_number=data['phone_number'],
-                email=data['email']
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            return make_response(jsonify(new_user.to_dict()), 201)
-        except ValueError as ve:
-            error_message = f"ValueError: {ve}"
-            print(error_message)
-            return make_response(jsonify({'error': error_message}), 400)
-        except Exception as e:
-            error_message = f"An error occurred: {e}"
-            print(error_message)
-            return make_response(jsonify({'error': error_message}), 500)
-
-
-
-api.add_resource(Users, '/users')
 
 class UsersByID(Resource):
     def get(self, id):
@@ -189,36 +304,12 @@ class UsersByID(Resource):
             print(f"An error occurred: {e}")
             return make_response('Error deleting user', 500)
 
-
-api.add_resource(UsersByID, '/users/<int:id>')
-
 class StaffManagements(Resource):
     def get(self):
         all_staff = StaffManagement.query.all()
         staff_list = [staff.to_dict() for staff in all_staff]
         return make_response(jsonify(staff_list), 200)
     
-    def post(self):
-        data = request.get_json()
-
-        try:
-            new_staff = StaffManagement(
-                name=data['name'],
-                role=data['role']
-            )
-            db.session.add(new_staff)
-            db.session.commit()
-            return make_response(jsonify(new_staff.to_dict()), 201)
-        except ValueError as ve:
-            error_message = f"ValueError: {ve}"
-            print(error_message)
-            return make_response(jsonify({'error': error_message}), 400)
-        except Exception as e:
-            error_message = f"An error occurred: {e}"
-            print(error_message)
-            return make_response(jsonify({'error': error_message}), 500)
-
-api.add_resource(StaffManagements, '/staffmanagements')
 
 class StaffManagementByID(Resource):
     def get(self, id):
@@ -267,8 +358,6 @@ class StaffManagementByID(Resource):
             print(f"An error occurred: {e}")
             return make_response('Error deleting staff member', 500)
 
-api.add_resource(StaffManagementByID, '/staffmanagements/<int:id>')
-
 class Reservations(Resource):
     def get(self):
         all_reservations = Reservation.query.all()
@@ -294,8 +383,6 @@ class Reservations(Resource):
             print(error_message)
             return make_response(jsonify({'error': error_message}), 500)
 
-
-api.add_resource(Reservations, '/reservations')
 class ReservationsByID(Resource):
     def get(self, id):
         reservation = Reservation.query.get(id)
@@ -337,8 +424,6 @@ class ReservationsByID(Resource):
             print(f"An error occurred: {e}")
             return make_response('Error deleting reservation', 500)
 
-api.add_resource(ReservationsByID, '/reservations/<int:id>')
-
 class RatingReviews(Resource):
     def get(self):
         all_reviews = RatingReview.query.all()
@@ -366,8 +451,6 @@ class RatingReviews(Resource):
             error_message = f"An error occurred: {e}"
             print(error_message)
             return make_response(jsonify({'error': error_message}), 500)
-
-api.add_resource(RatingReviews, '/ratingreviews')
 
 class RatingReviewByID(Resource):
     def get(self, id):
@@ -416,7 +499,22 @@ class RatingReviewByID(Resource):
             print(f"An error occurred: {e}")
             return make_response('Error deleting review', 500)
 
+api.add_resource(Index, '/')
+api.add_resource(Signup, '/signup', endpoint='signup')
+api.add_resource(Login, '/login', endpoint='login')
+api.add_resource(CheckSession, '/check_session', endpoint='check_session')
+api.add_resource(Restaurants, '/restaurants')
+api.add_resource(RestaurantsByID, '/restaurants/<int:id>')
+api.add_resource(Users, '/users')
+api.add_resource(UsersByID, '/users/<int:id>')
+api.add_resource(StaffManagements, '/staffmanagements')
+api.add_resource(StaffManagementByID, '/staffmanagements/<int:id>')
+api.add_resource(Reservations, '/reservations')
+api.add_resource(ReservationsByID, '/reservations/<int:id>')
+api.add_resource(RatingReviews, '/ratingreviews')
 api.add_resource(RatingReviewByID, '/ratingreviews/<int:id>')
+api.add_resource(Logout, '/logout', endpoint='logout')
+
 
 
 if __name__ == '__main__':

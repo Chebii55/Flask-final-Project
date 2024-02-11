@@ -14,6 +14,7 @@ def make_users():
         phone_number = fake.phone_number()[:10]
         email = fake.email()
         user = User(name=name, phone_number=phone_number, email=email)
+        user.password_hash = user.name + 'password'
         db.session.add(user)
 
     db.session.commit()
@@ -24,7 +25,10 @@ def make_staff_management():
     for _ in range(5):
         name = fake.name()
         role = random.choice(roles)
-        staff = StaffManagement(name=name, role=role)
+        phone_number = fake.phone_number()[:10]
+        email = fake.email()
+        staff = StaffManagement(name=name, role=role , phone_number=phone_number, email=email)
+        staff.password_hash = staff.name + 'password'
         db.session.add(staff)
     db.session.commit()
 
