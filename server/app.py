@@ -139,7 +139,8 @@ class CheckSession(Resource):
             if user:
                 response = {
                     "id": user.id,
-                    "user": user.name
+                    "user": user.name,
+                    "user_or_staff": "user"  # Indicate as a user
                 }
                 return response
             else:
@@ -150,7 +151,8 @@ class CheckSession(Resource):
             if staff:
                 response = {
                     "id": staff.id,
-                    "name": staff.name
+                    "name": staff.name,
+                    "user_or_staff": "staff"  # Indicate as a staff member
                 }
                 return response
             else:
@@ -158,6 +160,7 @@ class CheckSession(Resource):
         
         else:
             return {"error": "Session information missing"}, 401
+
 
         
 class Logout(Resource):
