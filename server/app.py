@@ -13,6 +13,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
+CORS(app)
+
 migrate = Migrate(app, db)
 
 db.init_app(app)
@@ -32,10 +34,8 @@ class Signup(Resource):
         user_or_staff=data['user_or_staff']
         if user_or_staff == 'user':
             try:
-                # Hash the password
                 password_hash = bcrypt.generate_password_hash(data['_password_hash']).decode('utf-8')
 
-                # Create a new User object
                 new_user = User(
                     name=data['name'],
                     phone_number=data['phone_number'],
@@ -43,14 +43,12 @@ class Signup(Resource):
                     _password_hash=password_hash
                 )
 
-                # Add the new user to the database session
                 db.session.add(new_user)
                 db.session.commit()
+                print("session checked in")
 
-                # Set the user_id in session
                 session["user_id"] = new_user.id
 
-                # Return success response with user data
                 return make_response(jsonify(new_user.to_dict()), 201)
             except ValueError as ve:
                 error_message = f"ValueError: {ve}"
@@ -77,6 +75,7 @@ class Signup(Resource):
 
                 # Add the new staff to the database session
                 db.session.add(new_staff)
+                print("session checked in")
                 db.session.commit()
                 session["staff_id"] = new_staff.id
 
@@ -104,6 +103,7 @@ class Login(Resource):
 
             if user and user.authenticate(password):
                 session["user_id"] = user.id
+                print("session checked in")
                 response = {
                     "id": user.id,
                     "name": user.name,
@@ -117,6 +117,7 @@ class Login(Resource):
 
             if staff and staff.authenticate(password):
                 session["staff_id"] = staff.id
+                print("session checked in")
                 response = {
                         "id": staff.id,
                         "name": staff.name,
@@ -376,6 +377,12 @@ class Reservations(Resource):
             )
             db.session.add(new_reservation)
             db.session.commit()
+            
+            # Update the number of tables in the booked restaurant
+            booked_restaurant = Restaurant.query.filter_by(id=data['restaurant_id']).first()
+            booked_restaurant.tables -= 1
+            db.session.commit()  # Save the changes
+            
             return make_response(jsonify(new_reservation.to_dict()), 201)
         except ValueError as ve:
             error_message = f"ValueError: {ve}"

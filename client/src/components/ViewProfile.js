@@ -11,12 +11,10 @@ function ViewProfile() {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    // Fetch user data from the server
-    // For demonstration, I'm using dummy data here
+
     const fetchUserData = async () => {
       try {
-        // Make a GET request to fetch user data
-        const response = await fetch('https://api.example.com/userdata');
+        const response = await fetch('userdata');
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
         }
@@ -44,8 +42,7 @@ function ViewProfile() {
 
   const handleSave = async () => {
     try {
-      // Make a PUT request to update user data
-      const response = await fetch('https://api.example.com/userdata', {
+      const response = await fetch('/users', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -62,46 +59,32 @@ function ViewProfile() {
   };
 
   return (
-    <div className="bg-gray-800 h-screen overflow-hidden flex items-center justify-center">
-      <div className="bg-white lg:w-5/12 md:w-6/12 w-10/12 shadow-3xl">
+    <div className="flex flex-wrap gap-4 pt-8 bg-gray-800 min-h-screen flex items-center justify-center">
+      <div className="bg-white lg:w-5/12 md:w-6/12 w-full shadow-3xl rounded-lg overflow-hidden">
         <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-800 p-6 bg-gray-200">View Profile</h1>
-        <form className="p-12 md:p-24">
-          <div className="flex items-center text-lg mb-6 md:mb-8">
-            <svg className="absolute ml-3" width="24" viewBox="0 0 24 24">
-              <path d="M20.822 18.096c-3.439-.794-6.64-1.49-5.09-4.418 4.72-8.912 1.251-13.678-3.732-13.678-5.082 0-8.464 4.949-3.732 13.678 1.597 2.945-1.725 3.641-5.09 4.418-3.073.71-3.188 2.236-3.178 4.904l.004 1h23.99l.004-.969c.012-2.688-.092-4.222-3.176-4.935z"/>
-            </svg>
-            <input type="text" id="name" className="bg-gray-200 pl-12 py-2 md:py-4 focus:outline-none w-full" placeholder="Name" value={userData.name} onChange={handleChange} disabled={!isEditing} />
+        <form className="p-6 md:p-12">
+          <div className="mb-6">
+            <label htmlFor="name" className="block text-lg font-medium text-gray-700 mb-2">Name</label>
+            <input type="text" id="name" className="bg-gray-100 pl-3 py-2 w-full focus:outline-none" placeholder="Name" value={userData.name} onChange={handleChange} disabled={!isEditing} />
           </div>
-          <div className="flex items-center text-lg mb-6 md:mb-8">
-            <svg className="absolute ml-3" viewBox="0 0 24 24" width="24">
-              <path d="m18.75 9h-.75v-3c0-3.309-2.691-6-6-6s-6 2.691-6 6v3h-.75c-1.24 0-2.25 1.009-2.25 2.25v10.5c0 1.241 1.01 2.25 2.25 2.25h13.5c1.24 0 2.25-1.009 2.25-2.25v-10.5c0-1.241-1.01-2.25-2.25-2.25zm-10.75-3c0-2.206 1.794-4 4-4s4 1.794 4 4v3h-8zm5 10.722v2.278c0 .552-.447 1-1 1s-1-.448-1-1v-2.278c-.595-.347-1-.985-1-1.722 0-1.103.897-2 2-2s2 .897 2 2c0 .737-.405 1.375-1 1.722z"/>
-            </svg>
-            <input type="text" id="phone" className="bg-gray-200 pl-12 py-2 md:py-4 focus:outline-none w-full" placeholder="Phone" value={userData.phone} onChange={handleChange} disabled={!isEditing} />
+          <div className="mb-6">
+            <label htmlFor="phone" className="block text-lg font-medium text-gray-700 mb-2">Phone</label>
+            <input type="text" id="phone" className="bg-gray-100 pl-3 py-2 w-full focus:outline-none" placeholder="Phone" value={userData.phone} onChange={handleChange} disabled={!isEditing} />
           </div>
-          <div className="flex items-center text-lg mb-6 md:mb-8">
-            <svg className="absolute ml-3" viewBox="0 0 24 24" width="24">
-              <path d="m18.75 9h-.75v-3c0-3.309-2.691-6-6-6s-6 2.691-6 6v3h-.75c-1.24 0-2.25 1.009-2.25 2.25v10.5c0 1.241 1.01 2.25 2.25 2.25h13.5c1.24 0 2.25-1.009 2.25-2.25v-10.5c0-1.241-1.01-2.25-2.25-2.25zm-10.75-3c0-2.206 1.794-4 4-4s4 1.794 4 4v3h-8zm5 10.722v2.278c0 .552-.447 1-1 1s-1-.448-1-1v-2.278c-.595-.347-1-.985-1-1.722 0-1.103.897-2 2-2s2 .897 2 2c0 .737-.405 1.375-1 1.722z"/>
-            </svg>
-            <input type="email" id="email" className="bg-gray-200 pl-12 py-2 md:py-4 focus:outline-none w-full" placeholder="Email" value={userData.email} onChange={handleChange} disabled={!isEditing} />
+          <div className="mb-6">
+            <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-2">Email</label>
+            <input type="email" id="email" className="bg-gray-100 pl-3 py-2 w-full focus:outline-none" placeholder="Email" value={userData.email} onChange={handleChange} disabled={!isEditing} />
           </div>
-          <div className="flex items-center text-lg mb-6 md:mb-8">
-            <svg className="absolute ml-3" viewBox="0 0 24 24" width="24">
-              <path d="m18.75 9h-.75v-3c0-3.309-2.691-6-6-6s-6 2.691-6 6v3h-.75c-1.24 0-2.25 1.009-2.25 2.25v10.5c0 1.241 1.01 2.25 2.25 2.25h13.5c1.24 0 2.25-1.009 2.25-2.25v-10.5c0-1.241-1.01-2.25-2.25-2.25zm-10.75-3c0-2.206 1.794-4 4-4s4 1.794 4 4v3h-8zm5 10.722v2.278c0 .552-.447 1-1 1s-1-.448-1-1v-2.278c-.595-.347-1-.985-1-1.722 0-1.103.897-2 2-2s2 .897 2 2c0 .737-.405 1.375-1 1.722z"/>
-            </svg>
-            <input type="text" id="staffId" className="bg-gray-200 pl-12 py-2 md:py-4 focus:outline-none w-full" placeholder="Staff ID" value={userData.staffId} onChange={handleChange} disabled={!isEditing} />
-          </div>
-          <div className="flex items-center text-lg mb-6 md:mb-8">
-            <svg className="absolute ml-3" viewBox="0 0 24 24" width="24">
-              <path d="m18.75 9h-.75v-3c0-3.309-2.691-6-6-6s-6 2.691-6 6v3h-.75c-1.24 0-2.25 1.009-2.25 2.25v10.5c0 1.241 1.01 2.25 2.25 2.25h13.5c1.24 0 2.25-1.009 2.25-2.25v-10.5c0-1.241-1.01-2.25-2.25-2.25zm-10.75-3c0-2.206 1.794-4 4-4s4 1.794 4 4v3h-8zm5 10.722v2.278c0 .552-.447 1-1 1s-1-.448-1-1v-2.278c-.595-.347-1-.985-1-1.722 0-1.103.897-2 2-2s2 .897 2 2c0 .737-.405 1.375-1 1.722z"/>
-            </svg>
-            <input type="password" id="password" className="bg-gray-200 pl-12 py-2 md:py-4 focus:outline-none w-full" placeholder="Password" disabled={!isEditing} />
+          <div className="mb-6">
+            <label htmlFor="staffId" className="block text-lg font-medium text-gray-700 mb-2">Staff ID</label>
+            <input type="text" id="staffId" className="bg-gray-100 pl-3 py-2 w-full focus:outline-none" placeholder="Staff ID" value={userData.staffId} onChange={handleChange} disabled={!isEditing} />
           </div>
           {!isEditing ? (
-            <button className="bg-gradient-to-b from-blue-700 to-blue-900 font-medium p-2 md:p-4 text-white uppercase w-full" onClick={handleEdit}>Edit Profile</button>
+            <button className="bg-blue-500 text-white font-medium py-3 w-full rounded-md uppercase hover:bg-blue-600 transition duration-300" onClick={handleEdit}>Edit Profile</button>
           ) : (
-            <div className="flex">
-              <button className="bg-gradient-to-b from-green-400 to-green-600 font-medium p-2 md:p-4 text-white uppercase mr-2" onClick={handleSave}>Save</button>
-              <button className="bg-gradient-to-b from-gray-400 to-gray-600 font-medium p-2 md:p-4 text-white uppercase" onClick={() => setIsEditing(false)}>Cancel</button>
+            <div className="flex justify-between">
+              <button className="bg-green-500 text-white font-medium py-3 w-1/2 rounded-md uppercase hover:bg-green-600 transition duration-300" onClick={handleSave}>Save</button>
+              <button className="bg-gray-500 text-white font-medium py-3 w-1/2 rounded-md uppercase hover:bg-gray-600 transition duration-300" onClick={() => setIsEditing(false)}>Cancel</button>
             </div>
           )}
         </form>

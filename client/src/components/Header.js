@@ -1,8 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect,useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Default to logged out state
-  const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [dropdownOpen, setDropdownOpen] = useState(false); 
+
+  useEffect(() => {
+    // Function to fetch session information
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/check_session');
+        if (response.ok) {
+          setIsLoggedIn(true); // Set isLoggedIn to true if session is active
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+
+    checkSession(); // Call the check session function
+  }, [isLoggedIn]);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen); // Toggle dropdown visibility
@@ -13,12 +30,14 @@ function Header() {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <img className="h-10 w-auto rounded-full" src={require('./Logo001.jpeg')} alt="Logo" />
-          <span className="text-white text-lg font-semibold ml-2">ReseRvista Restaurant Reservation</span>
+          <span className="text-white text-lg font-semibold ml-2">Reservista</span>
         </div>
         <nav className="space-x-4 flex items-center">
-          <button href="/" className="text-blue-500 hover:text-blue-700 focus:outline-none" onClick={() => setIsLoggedIn(false)}>Home</button>
-          <button href="/about" className="text-blue-500 hover:text-blue-700 focus:outline-none" onClick={() => setIsLoggedIn(false)}>About</button>
-          <button href="/contact" className="text-blue-500 hover:text-blue-700 focus:outline-none" onClick={() => setIsLoggedIn(false)}>Contact</button>
+          <Link to="/" className="text-blue-500 hover:text-blue-700 focus:outline-none">
+            <button>Home</button>
+          </Link><Link to="/about">
+          <button href="/about" className="text-blue-500 hover:text-blue-700 focus:outline-none" onClick={() => setIsLoggedIn(false)}>About</button></Link><Link to="/contactus">
+          <button href="/contact" className="text-blue-500 hover:text-blue-700 focus:outline-none" onClick={() => setIsLoggedIn(false)}>ContactUs</button></Link>
           {!isLoggedIn ? (
             <div className="relative inline-block text-left">
               <div>
@@ -33,14 +52,14 @@ function Header() {
               {dropdownOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                   <div className="py-1" role="none">
-                    <button onClick={() => setIsLoggedIn(true)} className="block w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 focus:outline-none" role="menuitem">Login</button>
-                    <button onClick={() => setIsLoggedIn(true)} className="block w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 focus:outline-none" role="menuitem">Sign Up</button>
+                    <Link to="/login"><button onClick={() => setIsLoggedIn(true)} className="block w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 focus:outline-none" role="menuitem">Login</button></Link>
+                    <Link to="/signup" ><button onClick={() => setIsLoggedIn(true)} className="block w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 focus:outline-none" role="menuitem">Sign Up</button></Link>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <button onClick={() => setIsLoggedIn(false)} className="text-blue-500 hover:text-blue-700 focus:outline-none">Logout</button>
+            <Link to="/"><button onClick={() => setIsLoggedIn(false)} className="text-blue-500 hover:text-blue-700 focus:outline-none">Logout</button></Link>
           )}
         </nav>
       </div>
