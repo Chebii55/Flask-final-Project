@@ -141,7 +141,7 @@ class CheckSession(Resource):
                 response = {
                     "id": user.id,
                     "user": user.name,
-                    "user_or_staff": "user"  # Indicate as a user
+                    "user_or_staff": "user" 
                 }
                 return response
             else:

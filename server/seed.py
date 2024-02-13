@@ -49,14 +49,14 @@ def make_restaurants():
 def make_reservations():
     Reservation.query.delete()
 
-    users = User.query.all()
-    restaurants = Restaurant.query.all()
+#     users = User.query.all()
+#     restaurants = Restaurant.query.all()
 
-    for user in users:
-        restaurant = fake.random_element(restaurants)
+#     for user in users:
+#         restaurant = fake.random_element(restaurants)
         
-        reservation = Reservation(user=user, restaurant=restaurant)
-        db.session.add(reservation)
+#         reservation = Reservation(user=user, restaurant=restaurant)
+#         db.session.add(reservation)
 
     db.session.commit()
 

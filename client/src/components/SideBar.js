@@ -1,9 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Block from "./Block";
 import { Link } from "react-router-dom";
 
 function SideBar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [sessionData, setSessionData] = useState(null);
+
+  useEffect(() => {
+    // Fetch session data when the component mounts
+    fetch("/check_session")
+      .then((res) => res.json())
+      .then((data) => {
+        setSessionData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching session data:", error);
+      });
+  }, []);
 
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
@@ -17,18 +30,26 @@ function SideBar() {
             <h5 className="block antialiased tracking-normal font-sans text-xl font-semibold leading-snug text-gray-900">Reservations Made</h5>
           </div>
           <nav className="flex flex-col gap-1 min-w-[240px] p-2 font-sans text-base font-normal text-gray-700">
-            <Link to="/reservation">
-              <Block fill={"Made Reservation"} width={200} />
-            </Link>
-            <Link to="/reservations">
-              <Block fill={"Reservation List"} width={200} /> {/* Adjusted width */}
-            </Link>
-            <Link to="/myreviews">
-              <Block fill={"My Reviews"} width={200} /> {/* Adjusted width */}
-            </Link>
-            <Link to="/profile">
-              <Block fill={"View Profile"} width={200} /> {/* Adjusted width */}
-            </Link>
+            {sessionData && sessionData.user_or_staff === 'user' && (
+              <>
+                <Link to="/myreviews">
+                  <Block fill={"My Reviews"} width={200} /> 
+                </Link>
+                <Link to="/madereservations">
+                  <Block fill={"MadeReservations"} width={200} />
+                </Link>
+                <Link to="/profile">
+                  <Block fill={"View Profile"} width={200} /> 
+                </Link>
+              </>
+            )}
+            {sessionData && sessionData.user_or_staff === 'staff' && (
+              <>
+                <Link to="/reservations">
+                  <Block fill={"Reservation List"} width={200} /> 
+                </Link>
+              </>
+            )}
           </nav>
         </>
       )}

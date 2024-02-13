@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Reviews from './Reviews';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
 
 function PerRestaurant() {
   const [formData, setFormData] = useState({
@@ -17,7 +14,6 @@ function PerRestaurant() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Fetch user data from check_session endpoint
         const response = await fetch('/check_session');
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
@@ -25,7 +21,6 @@ function PerRestaurant() {
         const userData = await response.json();
         const userId = userData.id;
 
-        // Update formData with the user_id
         setFormData(prevState => ({
           ...prevState,
           user_id: userId,
@@ -66,17 +61,13 @@ function PerRestaurant() {
   };
   
   function handleBookRestaurant() {
-    // Check if formData.user_id is available
     if (!formData.user_id) {
       console.error('User ID is missing.');
-      toast.error('Failed to book restaurant. User ID is missing.');
       return;
     }
   
-    // Check if restaurant ID is available
     if (!restaurant || !restaurant.id) {
       console.error('Restaurant ID is missing.');
-      toast.error('Failed to book restaurant. Restaurant ID is missing.');
       return;
     }
   
@@ -99,18 +90,10 @@ function PerRestaurant() {
         throw new Error('Network response was not ok');
       }
       console.log('Restaurant booked successfully');
-      toast.success('Restaurant booked successfully', {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      });
+    
     })
     .catch(error => {
       console.error('There was a problem with the fetch operation:', error);
-      toast.error('Failed to book restaurant. Please try again later.');
     });
   }
   
@@ -118,33 +101,52 @@ function PerRestaurant() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData)
+    
+    const formDataToSend = { ...formData };
+    for (const key in formDataToSend) {
+      if (formDataToSend[key] === null || formDataToSend[key] === undefined) {
+        delete formDataToSend[key];
+      }
+    }
+    formDataToSend.rating = parseInt(formDataToSend.rating); 
+    if (isNaN(formDataToSend.rating) || formDataToSend.rating < 1 || formDataToSend.rating > 5) {
+      console.error('Rating is invalid.');
+      return;
+    }
+    console.log(formDataToSend); // Make sure formDataToSend is constructed correctly
+    
     fetch(`/ratingreviews`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify(formDataToSend)
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(updatedReviews => {
-        setRestaurant(prevRestaurant => ({
-          ...prevRestaurant,
-          reviews: updatedReviews
-        }));
-        setFormData({
-          review: '',
-          rating: ''
-        });
-      })
-      .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to submit review. Please try again later.');
+      }
+      console.log(formDataToSend); // Check formDataToSend before it's updated
+      return response.json();
+    })
+    .then(updatedReviews => {
+      console.log(updatedReviews); // Make sure updatedReviews is received correctly
+  
+      console.log(formDataToSend); // Check formDataToSend after it's updated
+      setRestaurant(prevRestaurant => ({
+        ...prevRestaurant,
+        reviews: updatedReviews
+      }));
+      setFormData({
+        review: '',
+        rating: formData.rating || '1' // Ensure formData.rating is properly initialized
       });
+     
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+      // Consider adding a state to handle and display errors to the user
+    });
   };
 
   if (!restaurant) {
@@ -181,5 +183,4 @@ function PerRestaurant() {
   );
 }
 
-export default PerRestaurant
-
+export default PerRestaurant;

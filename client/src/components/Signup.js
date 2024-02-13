@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function SignupForm() {
   const [userOrStaff, setUserOrStaff] = useState('user'); 
@@ -11,32 +11,40 @@ function SignupForm() {
   const [staffRole, setStaffRole] = useState("");
   const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate=useNavigate()
 
   function handleSignup(e) {
     e.preventDefault();
     setErrors([]);
     setIsLoading(true);
+    const requestBody = {
+      user_or_staff: userOrStaff,
+      name,
+      phone_number: phone,
+      email,
+      _password_hash: password,
+      password_confirmation: passwordConfirmation
+    };
+  
+    // Add staff role to the request body only if the user is signing up as staff
+    if (userOrStaff === 'staff') {
+      requestBody.staff_role = staffRole;
+    }
+  
     fetch("/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        user_or_staff: userOrStaff,
-        name,
-        phone_number: phone,
-        email,
-        _password_hash: password,
-        password_confirmation: passwordConfirmation,
-        staff_role: staffRole 
-      }),
+      body: JSON.stringify(requestBody),
     })
     .then((r) => {
       setIsLoading(false);
       if (r.ok) {
         r.json().then((data) => {
           console.log(data);
-          <Link to="/home"/> 
+          navigate('/home');
+          console.log("Session created!")
         });
       } else {
         r.json().then((err) => {
@@ -50,6 +58,7 @@ function SignupForm() {
       setErrors(['An error occurred. Please try again.']);
     });
   }
+  
 
   return (
     <div className="bg-gray-800 h-screen overflow-hidden flex items-center justify-center">
@@ -65,10 +74,10 @@ function SignupForm() {
               <input type="radio" id="user" value="user" checked={userOrStaff === 'user'} onChange={() => setUserOrStaff('user')} />
               <label htmlFor="user" className="text-black">User</label>
             </div>
-            <div>
+            {/* <div>
               <input type="radio" id="staff" value="staff" checked={userOrStaff === 'staff'} onChange={() => setUserOrStaff('staff')} />
               <label htmlFor="staff" className="text-black">Staff</label>
-            </div>
+            </div> */}
           </div>
           <div className="flex items-center text-lg mb-6 md:mb-8">
             <svg className="absolute ml-3" width="24" viewBox="0 0 24 24">
